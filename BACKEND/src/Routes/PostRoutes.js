@@ -63,16 +63,24 @@ router.delete("/posts/:id", isLoggedIn, isAuthor, async (req, res) => {
 })
 
 
-// router.patch("/posts/:id", isLoggedIn, isAuthor, async (req, res) => {
-//     try {
-//         const { id } = req.params
-//         const { caption, location } = req.body
+router.patch("/posts/:id", isLoggedIn, isAuthor, async(req , res) => {
+    try {
+        const{id} = req.params
+        const{caption, location} = req.body
+        const updatedPost = await Post.findByIdAndUpdate(id, {caption, location}, {returnDocument:"after"})
+        if(!updatedPost)
+        {
+            throw new Error("Post not found")
+        }
 
-//         Post.updateOne({})
-//     } catch (error) {
+        res.status(200).json({msg : "done", data : updatedPost})
+    } catch (error) {
+        res.status(400).json({msg : error.message})
+    }
+})
+ 
 
-//     }
-// })
+
 
 
 module.exports = {
