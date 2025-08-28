@@ -1,4 +1,5 @@
 const mongoose = require("mongoose")
+const { Schema } = mongoose; 
 
 const postSchema = new mongoose.Schema({
     caption: {
@@ -9,7 +10,7 @@ const postSchema = new mongoose.Schema({
     location: {
         type: String,
         minlength: 3,
-        maxlength: 20,
+        maxlength: 40,
         trim: true
     },
     comments: [],
