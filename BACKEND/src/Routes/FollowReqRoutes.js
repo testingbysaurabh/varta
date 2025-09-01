@@ -2,7 +2,7 @@ const express = require("express")
 const router = express.Router()
 const { FollowRequest } = require("../Models/FollowRequests")
 const { User } = require("../Models/User")
-const { isLoggedIn } = require("../Middlewares/isLoggedin")
+const { isLoggedIn } = require("../Middlewares/IsLoggedIn")
 
 
 
@@ -91,9 +91,9 @@ router.patch("/follow-requests/review/:id/:status", isLoggedIn, async (req, res)
 })
 
 
-router.patch("/follow-requests/block/:userId", isLoggedIn, async(req, res) => {
+router.patch("/follow-requests/block/:userId", isLoggedIn, async (req, res) => {
     try {
-        const{userId} = req.params
+        const { userId } = req.params
         if (req.user.blocked.some(id => id.toString() === userId)) {
             throw new Error("User already blocked");
         }
@@ -133,33 +133,99 @@ router.patch("/follow-requests/block/:userId", isLoggedIn, async(req, res) => {
         req.user.following = filteredFollowing2
         await req.user.save()
 
-        res.status(200).json({msg : `User ${foundUser.username} blocked!`})
+        await FollowRequest.deleteOne({
+            $or: [
+                {
+                    $and: [
+                        { fromUserId: userId },
+                        { toUserId: req.user._id }
+                    ]
+                },
+                {
+                    $and: [
+                        { fromUserId: req.user._id },
+                        { toUserId: userId }
+                    ]
+                }
+            ]
+        })
+
+        res.status(200).json({ msg: `User ${foundUser.username} blocked!` })
     } catch (error) {
-        res.status(400).json({error : error.message})
+        res.status(400).json({ error: error.message })
     }
 })
 
 
 
 
-router.patch("/follow-requests/unblock/:userId", isLoggedIn, async(req, res) => {
+router.patch("/follow-requests/unblock/:userId", isLoggedIn, async (req, res) => {
     try {
-        const{userId} = req.params
+        const { userId } = req.params
         const filteredBlockedUsers = req.user.blocked.filter(
-        (item) => item.toString() !== userId
+            (item) => item.toString() !== userId
         );
         req.user.blocked = filteredBlockedUsers
         req.user.save()
-        res.status(200).json({msg : "done"})
+        res.status(200).json({ msg: "done" })
     } catch (error) {
-        res.status(400).json({error : error.message})
+        res.status(400).json({ error: error.message })
     }
 })
 
 
 
 
+router.patch("/follow-requests/unfollow/:id", isLoggedIn, async (req, res) => {
+    try {
+        const { id } = req.params
+        const foundUser = await User.findById(id)
+        if (!foundUser) {
+            throw new Error("User not found")
+        }
 
+        if (foundUser.followers.some((item) => {
+            return item.toString() == req.user._id.toString()
+        })) {
+            const filteredFollowers = foundUser.followers.filter((item) => {
+                return item.toString() != req.user._id.toString()
+            })
+            foundUser.followers = filteredFollowers
+            foundUser.save()
+
+            const filteredFollowing = req.user.following.filter((item) => {
+                return item.toString() != foundUser._id.toString()
+            })
+            req.user.following = filteredFollowing
+            req.user.save()
+
+            await FollowRequest.deleteOne({
+                $or: [
+                    {
+                        $and: [
+                            { fromUserId: id },
+                            { toUserId: req.user._id }
+                        ]
+                    },
+                    {
+                        $and: [
+                            { fromUserId: req.user._id },
+                            { toUserId: id }
+                        ]
+                    }
+                ]
+            })
+
+        }
+        else {
+            throw new Error("Invalid Operation")
+        }
+
+        res.status(200).json({ msg: "done" })
+    } catch (error) {
+        res.status(400).json({ error: error.message })
+    }
+})
 
 
 

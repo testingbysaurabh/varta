@@ -8,6 +8,7 @@ const { AuthRouter } = require("./Routes/AuthRoutes")
 const cookieParser = require("cookie-parser")
 const { PostRouter } = require("./Routes/PostRoutes")
 const { FollowReqRouter } = require("./Routes/FollowReqRoutes")
+const { CommentRouter } = require("./Routes/CommentsRouter")
 
 
 app.use(cors())
@@ -17,6 +18,7 @@ app.use("/api", otpRoutes)
 app.use("/api", AuthRouter)
 app.use("/api", PostRouter)
 app.use("/api", FollowReqRouter)
+app.use("/api", CommentRouter)
 
 
 mongoose.connect(process.env.MONGO_URL).then(() => {
@@ -26,5 +28,6 @@ mongoose.connect(process.env.MONGO_URL).then(() => {
 }).catch((error) => {
     console.log("DB connection fail " + error.message)
 })
+
 
 
