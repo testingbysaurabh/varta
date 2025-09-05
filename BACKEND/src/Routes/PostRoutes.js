@@ -1,9 +1,9 @@
 const express = require("express")
 const router = express.Router()
 const { isLoggedIn } = require("../Middlewares/IsLoggedIn")
-const { Post } = require("../Models/Posts")
 const { User } = require("../Models/User")
 const { isAuthor } = require("../Middlewares/IsAuthor")
+const { Post } = require("../Models/Posts")
 
 router.post("/posts/create", isLoggedIn, async (req, res) => {
     try {
@@ -20,8 +20,6 @@ router.post("/posts/create", isLoggedIn, async (req, res) => {
     }
 })
 
-
-
 router.get("/posts", isLoggedIn, async (req, res) => {
     try {
         const allPosts = await Post.find({ author: req.user._id })
@@ -30,8 +28,6 @@ router.get("/posts", isLoggedIn, async (req, res) => {
         res.status(400).json({ error: error.message })
     }
 })
-
-
 
 router.get("/posts/:id", isLoggedIn, isAuthor, async (req, res) => {
     try {
@@ -52,7 +48,6 @@ router.get("/posts/:id", isLoggedIn, isAuthor, async (req, res) => {
     }
 })
 
-
 router.delete("/posts/:id", isLoggedIn, isAuthor, async (req, res) => {
     try {
         const { id } = req.params
@@ -62,7 +57,6 @@ router.delete("/posts/:id", isLoggedIn, isAuthor, async (req, res) => {
         res.status(400).json({ msg: error.message })
     }
 })
-
 
 router.patch("/posts/:id", isLoggedIn, isAuthor, async (req, res) => {
     try {
@@ -141,7 +135,6 @@ router.patch("/posts/:id/unlike", isLoggedIn, async (req, res) => {
         res.status(400).json({ error: error.message })
     }
 })
-
 
 
 module.exports = {

@@ -122,6 +122,96 @@ router.post("/comments/:postId/:commentId/reply", isLoggedIn, async (req, res) =
 })
 
 
+router.delete("/comments/:postId/:commentId", isLoggedIn, async (req, res) => {
+    try {
+        const { postId, commentId } = req.params
+        const foundPost = await Post.findById(postId).populate("author")
+        const foundComment = await Comment.findById(commentId)
+
+        if (!foundPost || !foundComment) {
+            throw new Error("Post / Comment not found")
+        }
+
+        if (foundPost.comments.some(item => item.toString() == commentId)) {
+            if (foundPost.author.isPrivate) {
+                if ((foundPost.author.followers.some(item => item.toString() == req.user._id.toString())
+                    && foundComment.author.toString() == req.user._id.toString()) || foundPost.author._id.toString() == req.user._id.toString()) {
+                    await Comment.findByIdAndDelete(commentId)
+                    const filteredComments = foundPost.comments.filter((item) => {
+                        return item.toString() != commentId
+                    })
+                    foundPost.comments = filteredComments
+                    foundPost.save()
+                }
+                else {
+                    throw new Error("Access Denied")
+                }
+            }
+            else {
+                if (foundComment.author.toString() == req.user._id.toString() || foundPost.author._id.toString() == req.user._id.toString()) {
+                    await Comment.findByIdAndDelete(commentId)
+                    const filteredComments = foundPost.comments.filter((item) => {
+                        return item.toString() != commentId
+                    })
+                    foundPost.comments = filteredComments
+                    foundPost.save()
+                }
+                else {
+                    throw new Error("Access Denied 2")
+                }
+            }
+        }
+        else {
+            throw new Error("Invalid Operation")
+        }
+        res.status(200).json({ msg: "done" })
+    } catch (error) {
+        res.status(400).json({ error: error.message })
+    }
+})
+
+router.patch("/comments/:postId/:commentId/unlike", isLoggedIn, async (req, res) => {
+    try {
+        const { postId, commentId } = req.params
+        const foundPost = await Post.findById(postId).populate("author")
+        const foundComment = await Comment.findById(commentId)
+
+        if (!foundPost || !foundComment) {
+            throw new Error("Post / Comment not found")
+        }
+
+
+        if (foundPost.comments.some(item => item.toString() == commentId)) {
+            if (foundPost.author.isPrivate) {
+                if (foundPost.author.followers.some(item => item.toString() == req.user._id.toString())) {
+                    const filteredLikes = foundComment.likes.filter((item) => {
+                        return item.toString() != req.user._id.toString()
+                    })
+                    foundComment.likes = filteredLikes
+                    foundComment.save()
+                }
+                else {
+                    throw new Error("Invalid Operation / Access Denied")
+                }
+            }
+            else {
+                const filteredLikes = foundComment.likes.filter((item) => {
+                    return item.toString() != req.user._id.toString()
+                })
+                foundComment.likes = filteredLikes
+                foundComment.save()
+            }
+        }
+        else {
+            throw new Error("Invalid Operation")
+        }
+
+        res.status(200).json({ msg: "done" })
+    } catch (error) {
+        res.status(400).json({ error: error.message })
+    }
+})
+
 
 module.exports = {
     CommentRouter: router
