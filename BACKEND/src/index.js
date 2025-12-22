@@ -22,6 +22,7 @@ app.use("/api", FollowReqRouter)
 app.use("/api", CommentRouter)
 
 
+
 mongoose.connect(process.env.MONGO_URL).then(() => {
     console.log("DATA BASE CONNECT SUCCCESFUL")
     app.listen(process.env.PORT, () => console.log("SERVER CONNECTED " + process.env.PORT))
